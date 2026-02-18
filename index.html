@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTN TV – Télécharger l'application</title>
+  <meta name="description" content="Téléchargez MTN TV et profitez de la TV en streaming.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MTN TV – TV en Streaming">
+  <meta property="og:description" content="Téléchargez l'application MTN TV sur votre smartphone.">
+  <meta property="og:type" content="website">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #FFD700, #FF8C00);
+      border-radius: 20px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -1px;
+      box-shadow: 0 4px 15px rgba(255,140,0,0.4);
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    /* Spinner */
+    .spinner-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #f0f0f0;
+      border-top-color: #FF8C00;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .detecting-text {
+      color: #555;
+      font-size: 15px;
+    }
+
+    /* Store buttons */
+    .stores {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .btn-store {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 24px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-store:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+
+    .btn-android {
+      background: #01875f;
+      color: white;
+    }
+
+    .btn-apple {
+      background: #1a1a1a;
+      color: white;
+    }
+
+    .btn-store svg {
+      flex-shrink: 0;
+    }
+
+    .btn-text {
+      text-align: left;
+      line-height: 1.2;
+    }
+
+    .btn-text small {
+      display: block;
+      font-weight: 400;
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    .divider {
+      color: #ccc;
+      font-size: 13px;
+      margin: 4px 0;
+    }
+
+    .footer {
+      margin-top: 28px;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    /* Detected badge */
+    .badge {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+
+    .badge.ios-badge {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .badge.other-badge {
+      background: #f3e5f5;
+      color: #6a1b9a;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">M</div>
+  <h1>MTN TV</h1>
+  <p class="subtitle">TV en Streaming</p>
+
+  <!-- Spinner pendant détection -->
+  <div class="spinner-wrap" id="loading">
+    <div class="spinner"></div>
+    <p class="detecting-text">Détection de votre appareil…</p>
+  </div>
+
+  <!-- Résultat -->
+  <div id="result" style="display:none;">
+    <div id="badge" class="badge"></div>
+    <div class="stores" id="stores"></div>
+  </div>
+
+  <p class="footer">MTN TV &copy; 2024 · Tous droits réservés</p>
+</div>
+
+<script>
+  const ANDROID_URL = "https://play.google.com/store/apps/details?id=com.mtn.mtntv";
+  const IOS_URL     = "https://apps.apple.com/ci/app/mtn-tv-tv-en-streaming/id6702014202";
+
+  function detectDevice() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    if (/android/i.test(ua))                             return "android";
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "ios";
+    return "other";
+  }
+
+  function storeBtnHTML(href, icon, label, sublabel, cls) {
+    return `
+      <a href="${href}" class="btn-store ${cls}" target="_blank" rel="noopener">
+        ${icon}
+        <span class="btn-text">
+          <small>${sublabel}</small>
+          ${label}
+        </span>
+      </a>`;
+  }
+
+  const GOOGLE_ICON = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+    <path d="M3.18 23.76c.48.26 1.02.3 1.53.12l10.6-10.6-2.66-2.66L3.18 23.76z"/>
+    <path d="M22.04 10.44l-2.96-1.69L16.3 12l2.78 2.78 2.98-1.7c.84-.48.84-2.16-.02-2.64z"/>
+    <path d="M1.32 1.24C1.12 1.52 1 1.88 1 2.3v19.4c0 .42.12.78.32 1.06l.06.06L13.14 11 1.38 1.18l-.06.06z"/>
+    <path d="M4.71.12L15.83 11 13.17 13.66 2.57.18A1.74 1.74 0 014.71.12z"/>
+  </svg>`;
+
+  const APPLE_ICON = `<svg width="22" height="24" viewBox="0 0 814 1000" fill="white">
+    <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.9 135.4-318.1 268.8-318.1 68.4 0 125.5 43.3 169.1 43.3 41.6 0 106.7-45.7 188.6-45.7 30.5 0 108.2 2.6 168.1 81zm-80.8-190.5c31.8-39 53.9-93.4 53.9-147.8 0-7.6-.6-15.3-1.9-22.3-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 86.8-55.1 141.9 0 8.3 1.3 16.6 1.9 19.2 3.2.6 8.3 1.3 13.4 1.3 45.1 0 102.5-30.4 135-68.1z"/>
+  </svg>`;
+
+  setTimeout(() => {
+    const device = detectDevice();
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("result").style.display  = "block";
+
+    const badge  = document.getElementById("badge");
+    const stores = document.getElementById("stores");
+    stores.style.display = "flex";
+
+    if (device === "android") {
+      badge.textContent = "📱 Appareil Android détecté";
+      badge.className   = "badge";
+      stores.innerHTML  = storeBtnHTML(ANDROID_URL, GOOGLE_ICON, "Google Play Store", "Télécharger sur le", "btn-android");
+      // Auto-redirect
+      setTimeout(() => { window.location.href = ANDROID_URL; }, 1500);
+
+    } else if (device === "ios") {
+      badge.textContent = "📱 Appareil iOS détecté";
+      badge.className   = "badge ios-badge";
+      stores.innerHTML  = storeBtnHTML(IOS_URL, APPLE_ICON, "App Store", "Télécharger sur l'", "btn-apple");
+      // Auto-redirect
+      setTimeout(() => { window.location.href = IOS_URL; }, 1500);
+
+    } else {
+      badge.textContent = "💻 Choisissez votre store";
+      badge.className   = "badge other-badge";
+      stores.innerHTML  =
+        storeBtnHTML(ANDROID_URL, GOOGLE_ICON, "Google Play Store", "Télécharger sur le", "btn-android") +
+        `<p class="divider">ou</p>` +
+        storeBtnHTML(IOS_URL, APPLE_ICON, "App Store", "Télécharger sur l'", "btn-apple");
+    }
+  }, 1200);
+</script>
+
+</body>
+</html>
